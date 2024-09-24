@@ -1,8 +1,10 @@
-import { createUserWithEmailAndPassword } from "firebase/auth";
+import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
 import { useState } from "react";
 import { SubmitHandler, useForm } from "react-hook-form";
+import { ErrorMessage } from "@hookform/error-message";
 import styled from "styled-components";
 import { auth } from "../firebase";
+import { useNavigate } from "react-router-dom";
 
 interface IFormInput {
   name: string;
@@ -38,9 +40,21 @@ const Input = styled.input`
   font-size: 16px;
   &[type="submit"] {
     cursor: pointer;
-    &:hover {
-      opacity: 0.8;
+    &:hover,
+    &:focus {
+      color: white;
+      background-color: #08a0e9;
     }
+  }
+`;
+const Message = styled.p`
+  margin-left: 0.5rem;
+  font-size: 0.875rem;
+  color: crimson;
+
+  &::before {
+    display: inline;
+    content: "⚠ ";
   }
 `;
 
@@ -50,7 +64,8 @@ const Error = styled.span`
 `;
 
 export default function CreateAccount() {
-  const [isLoading, setLoading] = useState(true);
+  const navigate = useNavigate();
+  const [isLoading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
   const {
@@ -60,23 +75,21 @@ export default function CreateAccount() {
   } = useForm<IFormInput>();
 
   const onValid: SubmitHandler<IFormInput> = async (data) => {
-    if (
-      isLoading ||
-      data.name === "" ||
-      data.email === "" ||
-      data.password === "" ||
-      data.password.length < 6
-    )
-      return;
+    if (isLoading) return;
     try {
+      setLoading(true);
       const credentials = await createUserWithEmailAndPassword(
         auth,
         data.email,
         data.password
       );
-      console.log(credentials);
+      console.log(credentials.user);
+      await updateProfile(credentials.user, {
+        displayName: data.name,
+      });
+      navigate("/");
     } catch (error) {
-      console.log(1);
+      console.log("error!");
     } finally {
       setLoading(false);
     }
@@ -87,25 +100,48 @@ export default function CreateAccount() {
       <Title>Join 𝕏 </Title>
       <Form onSubmit={handleSubmit(onValid)}>
         <Input
-          {...register("name", { required: true })}
+          {...register("name", {
+            required: "This input is required",
+          })}
           placeholder="name"
           type="text"
         />
-        {errors.name && "you need name"}
+
+        <ErrorMessage
+          errors={errors}
+          name="name"
+          render={({ message }) => <Message>{message}</Message>}
+        />
         <Input
-          {...register("email", { required: true })}
+          {...register("email", { required: "This input is required" })}
           placeholder="email"
           type="email"
         />
-        {errors.email && "you need email"}
+        <ErrorMessage
+          errors={errors}
+          name="email"
+          render={({ message }) => <Message>{message}</Message>}
+        />
         <Input
-          {...register("password", { required: true, min: 6 })}
+          {...register("password", {
+            required: "This input is required",
+            minLength: {
+              value: 6,
+              message: "This input requires 6 letters at least",
+            },
+          })}
           placeholder="password"
           type="password"
         />
-
-        {errors.password && "you need password"}
-        <Input type="submit" value="Create Account" />
+        <ErrorMessage
+          errors={errors}
+          name="password"
+          render={({ message }) => <Message>{message}</Message>}
+        />
+        <Input
+          type="submit"
+          value={isLoading ? "Loading..." : "Create Account"}
+        />
       </Form>
       {error !== "" ? <Error>{error}</Error> : null}
     </Wrapper>
