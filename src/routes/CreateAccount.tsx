@@ -2,66 +2,25 @@ import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
 import { useState } from "react";
 import { SubmitHandler, useForm } from "react-hook-form";
 import { ErrorMessage } from "@hookform/error-message";
-import styled from "styled-components";
 import { auth } from "../firebase";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { FirebaseError } from "firebase/app";
+import {
+  Form,
+  Error,
+  Input,
+  Switcher,
+  Title,
+  Message,
+  Wrapper,
+} from "../components/Auth-components";
+import GithubButton from "../components/GithubButton";
 
 interface IFormInput {
   name: string;
   email: string;
   password: string;
 }
-
-const Wrapper = styled.div`
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  width: 420px;
-  padding: 50px 0px;
-`;
-
-const Title = styled.h1`
-  font-size: 42px;
-`;
-const Form = styled.form`
-  margin-top: 50px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  width: 100%;
-`;
-
-const Input = styled.input`
-  padding: 10px 20px;
-  border-radius: 50px;
-  border: none;
-  width: 100%;
-  font-size: 16px;
-  &[type="submit"] {
-    cursor: pointer;
-    &:hover,
-    &:focus {
-      color: white;
-      background-color: #08a0e9;
-    }
-  }
-`;
-const Message = styled.p`
-  margin-left: 0.5rem;
-  font-size: 0.875rem;
-  color: crimson;
-
-  &::before {
-    display: inline;
-    content: "⚠ ";
-  }
-`;
-
-const Error = styled.span`
-  font-weight: 600;
-  color: red;
-`;
 
 export default function CreateAccount() {
   const navigate = useNavigate();
@@ -75,6 +34,7 @@ export default function CreateAccount() {
   } = useForm<IFormInput>();
 
   const onValid: SubmitHandler<IFormInput> = async (data) => {
+    setError("");
     if (isLoading) return;
     try {
       setLoading(true);
@@ -89,7 +49,7 @@ export default function CreateAccount() {
       });
       navigate("/");
     } catch (error) {
-      console.log("error!");
+      if (error instanceof FirebaseError) setError(error.message);
     } finally {
       setLoading(false);
     }
@@ -144,6 +104,11 @@ export default function CreateAccount() {
         />
       </Form>
       {error !== "" ? <Error>{error}</Error> : null}
+      <Switcher>
+        You already have an account?
+        <Link to="/login"> Log in &rarr;</Link>
+      </Switcher>
+      <GithubButton />
     </Wrapper>
   );
 }
