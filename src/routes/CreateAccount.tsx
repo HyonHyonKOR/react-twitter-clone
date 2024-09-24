@@ -43,7 +43,7 @@ export default function CreateAccount() {
         data.email,
         data.password
       );
-      console.log(credentials.user);
+
       await updateProfile(credentials.user, {
         displayName: data.name,
       });

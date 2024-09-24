@@ -39,39 +39,44 @@ const MenuItem = styled.div`
   }
 `;
 
-const ModalContainer = styled.div`
+const Overlay = styled.div`
   position: fixed;
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  width: 50vw;
+  width: 55vw;
   height: 90vh;
+  background-color: rgba(0, 0, 0, 0.6);
 `;
 
 const Modal = styled.div`
-  width: 70%;
+  width: 40%;
   background-color: whitesmoke;
   border-radius: 10px;
+  margin-bottom: 5rem;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
   h1 {
-    padding: 4rem 3rem 1rem 3rem;
+    padding: 3.5rem 0 1rem;
     color: black;
     font-size: 1.5rem;
     text-align: center;
+    font-weight: 500;
   }
   div {
     display: flex;
     justify-content: center;
     gap: 2rem;
-    padding: 2rem 0;
+    padding: 1.5rem 0 2rem;
 
     button {
-      width: 5rem;
+      width: 30%;
       border-radius: 10px;
-      padding: 0.75rem 0.25rem;
+      padding: 0.625rem 0rem;
       font-size: 1rem;
-      font-weight: 600;
-      border: none;
+      font-weight: 500;
+      border-radius: 1.25rem;
       color: white;
       cursor: pointer;
       &:hover {
@@ -80,10 +85,12 @@ const Modal = styled.div`
     }
 
     :first-child {
-      background-color: black;
+      border: 1px solid #08a0e9;
+      color: #08a0e9;
     }
     :last-child {
       background-color: #08a0e9;
+      border: none;
     }
   }
 `;
@@ -150,7 +157,7 @@ export default function Layout() {
       </Menu>
       <Outlet />
       {modalOpen && (
-        <ModalContainer>
+        <Overlay>
           <Modal>
             <h1>Do you wanna Logout?</h1>
             <div>
@@ -158,7 +165,7 @@ export default function Layout() {
               <button onClick={() => setModalOpen(false)}>No</button>
             </div>
           </Modal>
-        </ModalContainer>
+        </Overlay>
       )}
     </Wrapper>
   );
