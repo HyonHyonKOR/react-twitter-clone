@@ -29,10 +29,11 @@ export const Input = styled.input`
   font-size: 16px;
   &[type="submit"] {
     cursor: pointer;
+    background-color: #08a0e9;
+    color: white;
     &:hover,
     &:focus {
-      color: white;
-      background-color: #08a0e9;
+      opacity: 0.8;
     }
   }
 `;
