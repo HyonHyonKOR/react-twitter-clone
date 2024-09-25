@@ -1,11 +1,9 @@
+import { addDoc, collection, updateDoc } from "firebase/firestore";
 import { useState } from "react";
-import { SubmitHandler, useForm } from "react-hook-form";
 import { styled } from "styled-components";
+import { auth, db, storage } from "../firebase";
+import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
 
-interface IFormInput {
-  textarea: string;
-  file: FileList | null;
-}
 const Form = styled.form`
   display: flex;
   flex-direction: column;
@@ -59,34 +57,73 @@ const SubmitBtn = styled.input`
 
 export default function PostTweetForm() {
   const [isLoading, setLoading] = useState(false);
-  const { register, handleSubmit } = useForm<IFormInput>();
-  const onValid: SubmitHandler<IFormInput> = async (data) => {
-    console.log(data.textarea);
-    console.log(data.file);
+  const [tweet, setTweet] = useState("");
+  const [file, setFile] = useState<File | null>(null);
+  const user = auth.currentUser;
+
+  const onChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setTweet(e.currentTarget.value);
+  };
+
+  const onFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { files } = e.target;
+    if (files && files.length === 1 && files[0].size < 1 * 1024 * 1024)
+      setFile(files[0]);
+  };
+
+  const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!user || isLoading || tweet === "" || tweet.length > 180) return;
+    try {
+      setLoading(true);
+      const doc = await addDoc(collection(db, "tweets"), {
+        tweet,
+        createdAt: Date.now(),
+        username: user.displayName || "Anonymus",
+        userId: user.uid,
+      });
+
+      if (file) {
+        const locationRef = ref(
+          storage,
+          `tweets/${user.uid}-${user.displayName}/${doc.id}`
+        );
+        const result = await uploadBytes(locationRef, file);
+        const url = await getDownloadURL(result.ref);
+        await updateDoc(doc, {
+          photo: url,
+        });
+      }
+
+      setTweet("");
+      setFile(null);
+    } catch (error) {
+      console.log(error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <Form>
+    <Form onSubmit={onSubmit}>
       <TextArea
-        {...register("textarea", {
-          required: true,
-          maxLength: {
-            value: 180,
-            message: "Description cannot be longer than 180 characters",
-          },
-        })}
+        value={tweet}
+        onChange={onChange}
+        required
+        maxLength={180}
         placeholder="What is happening?!"
         rows={5}
       />
-      <AttachFileButton htmlFor="file">Add Photo</AttachFileButton>
+      <AttachFileButton htmlFor="file">
+        {file ? "Photo added ✅" : "Add photo"}
+      </AttachFileButton>
       <AttachFileInput
-        {...register("file")}
+        onChange={onFileChange}
         type="file"
         id="file"
         accept="image/*"
       />
       <SubmitBtn
-        onSubmit={handleSubmit(onValid)}
         type="submit"
         value={isLoading ? "Posting..." : "Post Tweet"}
       />
