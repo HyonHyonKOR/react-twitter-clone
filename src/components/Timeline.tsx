@@ -67,7 +67,9 @@ export default function Timeline() {
       });
     };
     fetchTweets();
-    return () => unsubscribe && unsubscribe();
+    return () => {
+      unsubscribe && unsubscribe();
+    };
   }, []);
   return (
     <Wrapper>
